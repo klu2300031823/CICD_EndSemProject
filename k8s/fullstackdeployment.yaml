@@ -32,7 +32,7 @@ spec:
           image: mysql:8.0
           env:
             - name: MYSQL_DATABASE
-              value: ecommerce
+              value: exam
             - name: MYSQL_ROOT_PASSWORD
               value: root
           ports:
@@ -63,38 +63,20 @@ spec:
       labels:
         app: backend
     spec:
-      initContainers:
-        - name: wait-for-mysql
-          image: busybox
-          command: ['sh', '-c', 'until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;']
       containers:
         - name: backend
-          image: jayanthraj/mas-backend1:v1
+          image: prem0520/exam-backend1:v1
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql:3306/ecommerce
+              value: jdbc:mysql://mysql:3306/exam
             - name: SPRING_DATASOURCE_USERNAME
               value: root
             - name: SPRING_DATASOURCE_PASSWORD
               value: root
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: update
-            - name: SPRING_JPA_DATABASE_PLATFORM
-              value: org.hibernate.dialect.MySQL8Dialect
-
-# =========================
-# ConfigMap for Frontend
-# (used by frontend at build time if wired in code)
-# =========================
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: frontend-config
-data:
-  REACT_APP_BACKEND_URL: "http://backend:8080"
 
 # =========================
 # Frontend Deployment
@@ -116,20 +98,16 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: jayanthraj/mas-frontend1:v1
+          image: prem0520/exam-frontend1:v1
           ports:
             - containerPort: 8080
           env:
             - name: REACT_APP_BACKEND_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: frontend-config
-                  key: REACT_APP_BACKEND_URL
+              value: http://backend:8080
 
 # =========================
 # Services
 # =========================
-
 ---
 # MySQL Service
 apiVersion: v1
@@ -145,29 +123,31 @@ spec:
       targetPort: 3306
 
 ---
-# Backend Service (ClusterIP, exposed via port-forward)
+# Backend Service
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: backend
   ports:
     - port: 8080
       targetPort: 8080
+      nodePort: 30085
 
 ---
-# Frontend Service (ClusterIP, exposed via port-forward)
+# Frontend Service
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: frontend
   ports:
     - port: 8080
       targetPort: 8080
+      nodePort: 30084
