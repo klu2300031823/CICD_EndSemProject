@@ -83,5 +83,5 @@
     - name: Show access URLs
       ansible.builtin.debug:
         msg:
-          - "✅ Frontend: http://localhost:{{ frontend_nodeport }}/ecommerce/"
+          - "✅ Frontend: http://localhost:{{ frontend_nodeport }}/exam/"
           - "✅ Backend:  http://localhost:{{ backend_nodeport }}/back1/"
