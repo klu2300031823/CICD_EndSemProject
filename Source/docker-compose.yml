@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8
+    container_name: exam-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: examdb
+    ports:
+      - "3307:3306"   # MySQL available at localhost:3307
+    networks:
+      - exam-net
+    volumes:
+      - db-data:/var/lib/mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: exam-backend
+    ports:
+      - "8085:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/examdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - exam-net
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: exam-frontend
+    ports:
+      - "8082:8080"   # frontend available at localhost:8082
+    depends_on:
+      - backend
+    networks:
+      - exam-net
+
+volumes:
+  db-data:
+
+networks:
+  exam-net:
+    driver: bridge
